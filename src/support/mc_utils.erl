@@ -31,7 +31,8 @@
   hmac/2,
   is_proplist/1,
   to_binary/1,
-  get_srv_seeds/1]).
+  get_srv_seeds/1,
+  use_legacy_protocol/0]).
 
 get_value(Key, List) -> get_value(Key, List, undefined).
 
@@ -118,7 +119,16 @@ get_srv_seeds(Host) ->
       {error, srv_lookup_failed}
   end.
 
+%% @private
 valid_endpoint(Host, Srv) ->
   [_ | HostBaseDomain] = string:split(Host, "."),
   [_ | SrvBaseDomain] = string:split(Srv, "."),
   HostBaseDomain == SrvBaseDomain.
+
+  %% Latest MongoDB version that supported the non-op-msg based protocol was
+  %% 5.0.x (at the time of writing 5.0.14). The non-op-msg based protocol was
+  %% removed in MongoDB version 5.1.0. See
+  %% https://www.mongodb.com/docs/manual/legacy-opcodes/
+  -spec use_legacy_protocol() -> boolean().
+  use_legacy_protocol() ->
+    application:get_env(mongodb, use_legacy_protocol, true).

@@ -8,6 +8,7 @@
 -type colldb() :: collection() | {database(), collection()}.
 -type collection() :: binary() | atom(). % without db prefix
 -type database() :: binary() | atom().
+-type command() :: insert | update | delete.
 
 
 %% write
