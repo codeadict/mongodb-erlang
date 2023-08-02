@@ -108,7 +108,20 @@ insert(Connection, Coll, Doc, WC, DB) when is_tuple(Doc); is_map(Doc) ->
   {Res, UDoc};
 insert(Connection, Coll, Docs, WC, DB) ->
   Converted = prepare(Docs, fun assign_id/1),
-  {command(DB, Connection, {<<"insert">>, Coll, <<"documents">>, Converted, <<"writeConcern">>, WC}), Converted}.
+  case mc_utils:use_legacy_protocol() of
+    true ->
+      {command(DB,
+               Connection,
+               {<<"insert">>, Coll, <<"documents">>, Converted, <<"writeConcern">>, WC}),
+       Converted};
+    false ->
+      Msg =
+        #op_msg_write_op{command = insert,
+                         collection = Coll,
+                         extra_fields = [{<<"writeConcern">>, WC}],
+                         documents = Converted},
+      {mc_connection_man:op_msg(Connection, Msg), Converted}
+  end.
 
 %% @doc Insert one document or multiple documents into a colleciton.
 %% params:
